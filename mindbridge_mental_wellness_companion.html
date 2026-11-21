@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindBridge — Your Mental Wellness Companion</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Pastel lavender-to-white gradient matching Welcome/Auth screenshot */
+    .auth-gradient {
+      background: linear-gradient(160deg, #E6E3FA 0%, #F1EFFC 45%, #F9F9FD 100%);
+    }
+
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+
+    /* Breathing circle smooth transition */
+    .breath-circle {
+      transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1), background-color 1s ease;
+    }
+
+    /* Smooth fade-in animation for views & modals */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.22s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#EEF0F6] text-slate-800 min-h-screen flex justify-center items-start sm:py-6">
+
+  <!-- Mobile-First App Shell Container -->
+  <div id="app-shell" class="w-full max-w-[460px] min-h-screen sm:min-h-[820px] sm:h-[820px] bg-[#F8F9FC] sm:rounded-[32px] sm:shadow-2xl sm:border sm:border-slate-200/80 flex flex-col relative overflow-hidden">
+
+    <!-- Toast Notification Banner (Replaces alert) -->
+    <div id="toast-banner" class="hidden fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[380px] bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-lg flex items-center justify-between gap-2 animate-fade-in">
+      <span id="toast-message">Saved successfully</span>
+      <button onclick="hideToast()" class="text-slate-400 hover:text-white text-sm font-bold px-1">&times;</button>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 1. WELCOME & AUTHENTICATION SCREEN                        -->
+    <!-- ========================================================= -->
+    <section id="auth-screen" class="auth-gradient flex-1 flex flex-col justify-between px-7 py-10 overflow-y-auto">
+      <div class="my-auto w-full max-w-[360px] mx-auto">
+        <!-- App Logo -->
+        <div class="flex flex-col items-center text-center mb-8">
+          <div class="w-16 h-16 rounded-2xl bg-[#6C6CE5] shadow-md shadow-indigo-500/20 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-slate-900 tracking-tight">MindBridge</h1>
+          <p class="text-sm text-slate-500 mt-1">Your mental wellness companion</p>
+        </div>
+
+        <!-- Auth Form -->
+        <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+          <div id="name-field-wrapper">
+            <label for="auth-name" class="block text-xs font-semibold text-slate-700 mb-1.5">Your Name</label>
+            <input type="text" id="auth-name" placeholder="How should we call you?"
+              class="w-full px-4 py-3 rounded-2xl bg-white/95 border border-slate-200/80 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40 focus:border-[#6366F1] transition" />
+          </div>
+
+          <div>
+            <label for="auth-email" class="block text-xs font-semibold text-slate-700 mb-1.5">Email</label>
+            <input type="email" id="auth-email" required placeholder="student@epsuniversity.edu"
+              class="w-full px-4 py-3 rounded-2xl bg-[#EBF2FE] border border-blue-200/60 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40 focus:border-[#6366F1] transition" />
+          </div>
+
+          <div>
+            <label for="auth-password" class="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
+            <div class="relative">
+              <input type="password" id="auth-password" required placeholder="••••••••"
+                class="w-full px-4 py-3 pr-11 rounded-2xl bg-[#EBF2FE] border border-blue-200/60 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40 focus:border-[#6366F1] transition" />
+              <button type="button" onclick="togglePasswordVisibility()" aria-label="Toggle password visibility"
+                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <p id="auth-error" class="hidden text-xs text-rose-600 font-medium text-center"></p>
+
+          <button type="submit" id="auth-submit-btn"
+            class="w-full py-3.5 rounded-full bg-[#5E60E6] hover:bg-[#4F51D8] active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-indigo-500/20 transition cursor-pointer mt-2">
+            Create Account
+          </button>
+        </form>
+
+        <!-- Mode Toggle & Quick Demo Login for Project Defense -->
+        <div class="mt-5 text-center space-y-3">
+          <button type="button" onclick="toggleAuthMode()" id="auth-toggle-btn"
+            class="text-xs font-medium text-slate-600 hover:text-[#5E60E6] transition">
+            Already have an account? <span class="underline font-semibold">Sign in</span>
+          </button>
+
+          <div class="pt-1">
+            <button type="button" onclick="quickDemoLogin()"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/80 hover:bg-white border border-indigo-200/80 text-xs font-semibold text-[#5E60E6] shadow-xs transition">
+              <span>⚡ Quick Demo Login (EPS Student)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Medical Disclaimer Footer -->
+        <p class="text-[11px] text-slate-400 text-center leading-relaxed mt-8 px-2">
+          MindBridge is not a medical device and is not a substitute for professional mental health treatment.
+        </p>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- MAIN AUTHENTICATED APP SHELL                              -->
+    <!-- ========================================================= -->
+    <div id="main-app" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+
+      <!-- Offline / Privacy Status Strip -->
+      <div class="bg-white/80 border-b border-slate-100 px-5 py-2 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
+        <span class="flex items-center gap-1.5 font-medium">
+          <span id="connection-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="connection-label">Offline-Ready • Private Local Vault</span>
+        </span>
+        <span class="text-indigo-600 font-semibold">EPS Wellness</span>
+      </div>
+
+      <!-- Scrollable Viewport for Active Tab -->
+      <main id="tab-viewport" class="flex-1 overflow-y-auto px-5 pt-5 pb-24 space-y-4">
+
+        <!-- ------------------------------------------------------- -->
+        <!-- TAB 1: HOME DASHBOARD                                   -->
+        <!-- ------------------------------------------------------- -->
+        <div id="view-home" class="space-y-4 animate-fade-in">
+          <!-- Greeting Header -->
+          <div class="pt-1">
+            <h2 id="dashboard-greeting" class="text-[22px] font-bold text-slate-900 tracking-tight">Good evening, Student 👋</h2>
+            <p class="text-sm text-slate-500 mt-0.5">How are you feeling today?</p>
+          </div>
+
+          <!-- Today's Mood Check-in Card -->
+          <button onclick="switchTab('mood')"
+            class="w-full bg-white hover:bg-indigo-50/30 border border-slate-200/70 rounded-2xl p-4 shadow-xs flex items-center justify-between text-left transition active:scale-[0.99]">
+            <div>
+              <p class="text-xs font-medium text-slate-400">Today's Mood</p>
+              <p id="home-today-mood-text" class="text-base font-bold text-[#5254B5] mt-0.5">Tap to check in</p>
+            </div>
+            <div id="home-today-mood-icon" class="w-11 h-11 rounded-full bg-[#EEF0FC] text-[#5E60E6] flex items-center justify-center text-xl">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="9" />
+                <path stroke-linecap="round" d="M9 10h.01M15 10h.01M8.5 14.5c.83 1.2 2.1 2 3.5 2s2.67-.8 3.5-2" />
+              </svg>
+            </div>
+          </button>
+
+          <!-- Two-Column Quick Action Grid -->
+          <div class="grid grid-cols-2 gap-3.5">
+            <button onclick="switchTab('journal')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/70 rounded-2xl p-4 shadow-xs text-left transition active:scale-[0.98]">
+              <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#5E60E6] flex items-center justify-center mb-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                </svg>
+              </div>
+              <p class="text-sm font-bold text-slate-800">Write in Journal</p>
+              <p id="home-journal-count" class="text-xs text-slate-400 mt-0.5">2 entries</p>
+            </button>
+
+            <button onclick="switchTab('chat')"
+              class="bg-white hover:bg-slate-50 border border-slate-200/70 rounded-2xl p-4 shadow-xs text-left transition active:scale-[0.98]">
+              <div class="w-9 h-9 rounded-xl bg-indigo-50 text-[#5E60E6] flex items-center justify-center mb-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+                </svg>
+              </div>
+              <p class="text-sm font-bold text-slate-800">Talk to AI Guide</p>
+              <p class="text-xs text-slate-400 mt-0.5">Wellness companion</p>
+            </button>
+          </div>
+
+          <!-- Recent Moods Card -->
+          <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+                </svg>
+                <h3 class="text-sm font-bold text-slate-800">Recent Moods</h3>
+              </div>
+              <button onclick="switchTab('mood')" class="text-xs font-semibold text-[#5E60E6] hover:underline">View all</button>
+            </div>
+            <div id="home-recent-moods" class="grid grid-cols-3 gap-2 text-center py-1">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Wellness Tools (Self-Assessment, Guided Breathing & Resources from Chapter 3) -->
+          <div class="space-y-2.5">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Self-Help & Guided Tools</h3>
+            <div class="grid grid-cols-3 gap-2.5">
+              <button onclick="openToolModal('assessment')"
+                class="bg-white hover:bg-indigo-50/40 border border-slate-200/70 rounded-2xl p-3 shadow-xs flex flex-col items-center text-center transition active:scale-[0.98]">
+                <span class="w-9 h-9 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-base mb-1.5">📋</span>
+                <span class="text-xs font-bold text-slate-800 leading-tight">Self-Check</span>
+                <span class="text-[10px] text-slate-400 mt-0.5">5-Q Quiz</span>
+              </button>
+
+              <button onclick="openToolModal('breathing')"
+                class="bg-white hover:bg-indigo-50/40 border border-slate-200/70 rounded-2xl p-3 shadow-xs flex flex-col items-center text-center transition active:scale-[0.98]">
+                <span class="w-9 h-9 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center text-base mb-1.5">🌬️</span>
+                <span class="text-xs font-bold text-slate-800 leading-tight">Breathe</span>
+                <span class="text-[10px] text-slate-400 mt-0.5">4-7-8 Calm</span>
+              </button>
+
+              <button onclick="openToolModal('resources')"
+                class="bg-white hover:bg-indigo-50/40 border border-slate-200/70 rounded-2xl p-3 shadow-xs flex flex-col items-center text-center transition active:scale-[0.98]">
+                <span class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-base mb-1.5">💡</span>
+                <span class="text-xs font-bold text-slate-800 leading-tight">Tips</span>
+                <span class="text-[10px] text-slate-400 mt-0.5">Resources</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Find a Therapist Card -->
+          <button onclick="openToolModal('therapist')"
+            class="w-full bg-white hover:bg-slate-50 border border-slate-200/70 rounded-2xl p-4 shadow-xs flex items-center gap-3.5 text-left transition active:scale-[0.99]">
+            <div class="w-10 h-10 rounded-full bg-[#EEF0FC] text-[#5E60E6] flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-slate-800">Find a Therapist</p>
+              <p class="text-xs text-slate-400 mt-0.5">Professional support when you need it</p>
+            </div>
+          </button>
+
+          <!-- Crisis Lifeline Banner -->
+          <button onclick="openToolModal('crisis')"
+            class="w-full bg-[#F1F1FA] hover:bg-[#E7E7F8] border border-indigo-100 rounded-2xl p-4 text-center transition active:scale-[0.99]">
+            <div class="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-[#4A4CB8]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+              </svg>
+              <span>Crisis? Call or text 988</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Suicide &amp; Crisis Lifeline — available 24/7</p>
+          </button>
+        </div>
+
+        <!-- ------------------------------------------------------- -->
+        <!-- TAB 2: MOOD TRACKING MODULE                             -->
+        <!-- ------------------------------------------------------- -->
+        <div id="view-mood" class="hidden space-y-5 animate-fade-in">
+          <div class="pt-1">
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">How are you?</h2>
+            <p class="text-sm text-slate-500 mt-0.5">Take a moment to check in with yourself.</p>
+          </div>
+
+          <!-- 5 Expressive Mood Buttons -->
+          <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-4">
+            <div class="grid grid-cols-5 gap-2 text-center" id="mood-selector-grid">
+              <!-- Rendered via JS -->
+            </div>
+
+            <!-- Optional Note Input -->
+            <div>
+              <input type="text" id="mood-note-input" placeholder="Add a short note about how you feel (optional)..."
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40 focus:border-[#6366F1]" />
+            </div>
+
+            <button onclick="saveMoodEntry()"
+              class="w-full py-3 rounded-full bg-[#5E60E6] hover:bg-[#4F51D8] active:scale-[0.99] text-white font-semibold text-xs shadow-sm transition cursor-pointer">
+              Save Check-in
+            </button>
+          </div>
+
+          <!-- Mood Wellness Trend Summary Bar -->
+          <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-700">Emotional Wellness Pulse</span>
+              <span id="mood-average-badge" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-[#5E60E6]">Tracking Active</span>
+            </div>
+            <div id="mood-trend-bars" class="flex items-end gap-2 h-14 pt-2 px-1">
+              <!-- Visual trend bars rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Recent Check-ins List -->
+          <div class="space-y-2.5">
+            <h3 class="text-sm font-bold text-slate-800">Recent Check-ins</h3>
+            <div id="mood-history-list" class="space-y-2.5">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ------------------------------------------------------- -->
+        <!-- TAB 3: PRIVATE JOURNAL MODULE                           -->
+        <!-- ------------------------------------------------------- -->
+        <div id="view-journal" class="hidden space-y-4 animate-fade-in">
+          <div class="flex items-center justify-between pt-1">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Journal</h2>
+              <p class="text-sm text-slate-500 mt-0.5">Your private space to reflect.</p>
+            </div>
+            <button onclick="openJournalComposer()" aria-label="New Journal Entry"
+              class="w-11 h-11 rounded-full bg-[#5E60E6] hover:bg-[#4F51D8] text-white shadow-md shadow-indigo-500/25 flex items-center justify-center text-xl font-medium transition active:scale-95 cursor-pointer">
+              +
+            </button>
+          </div>
+
+          <!-- Inline New Entry Composer (Toggled via + button) -->
+          <div id="journal-composer" class="hidden bg-white border border-indigo-200 rounded-2xl p-4 shadow-sm space-y-3 animate-fade-in">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#5E60E6]">New Reflection</span>
+              <button onclick="closeJournalComposer()" class="text-xs text-slate-400 hover:text-slate-600">Cancel</button>
+            </div>
+            <input type="text" id="journal-title-input" placeholder="Entry title (optional)..."
+              class="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40" />
+            <textarea id="journal-body-input" rows="4" placeholder="Write freely... Your entries are stored privately on your device."
+              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40 resize-none"></textarea>
+            <button onclick="saveJournalEntry()"
+              class="w-full py-2.5 rounded-full bg-[#5E60E6] hover:bg-[#4F51D8] text-white font-semibold text-xs transition cursor-pointer">
+              Save Entry
+            </button>
+          </div>
+
+          <!-- Journal Entries List -->
+          <div id="journal-list" class="space-y-3">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- ------------------------------------------------------- -->
+        <!-- TAB 4: AI WELLNESS GUIDE (CHAT)                         -->
+        <!-- ------------------------------------------------------- -->
+        <div id="view-chat" class="hidden flex flex-col h-full min-h-[580px] animate-fade-in">
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-3">
+            <div>
+              <h2 class="text-xl font-bold text-slate-900 tracking-tight">AI Wellness Guide</h2>
+              <p class="text-xs text-slate-500">Here to listen, not to diagnose</p>
+            </div>
+            <button onclick="openToolModal('crisis')" title="Crisis Support"
+              class="w-9 h-9 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Disclaimer Pill Banner -->
+          <div class="bg-[#EEF0F8] border border-slate-200/80 rounded-2xl px-3.5 py-2.5 flex items-start gap-2.5 mb-3">
+            <svg class="w-4 h-4 text-slate-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <p class="text-[11px] text-slate-600 leading-snug">
+              MindBridge is not a medical device and is not a substitute for professional mental health treatment.
+            </p>
+          </div>
+
+          <!-- Chat Messages Feed -->
+          <div id="chat-messages-container" class="flex-1 overflow-y-auto space-y-3 pr-1 pb-3">
+            <!-- Populated dynamically -->
+          </div>
+
+          <!-- Quick Action Pills -->
+          <div class="flex gap-1.5 overflow-x-auto pb-2 pt-1 shrink-0">
+            <button onclick="openToolModal('assessment')"
+              class="shrink-0 px-3 py-1.5 rounded-full bg-white border border-indigo-200 text-[11px] font-semibold text-[#5E60E6] hover:bg-indigo-50 transition">
+              📋 Self-Assessment
+            </button>
+            <button onclick="openToolModal('breathing')"
+              class="shrink-0 px-3 py-1.5 rounded-full bg-white border border-indigo-200 text-[11px] font-semibold text-[#5E60E6] hover:bg-indigo-50 transition">
+              🌬️ Guided Breathing
+            </button>
+            <button onclick="openToolModal('resources')"
+              class="shrink-0 px-3 py-1.5 rounded-full bg-white border border-indigo-200 text-[11px] font-semibold text-[#5E60E6] hover:bg-indigo-50 transition">
+              💡 Wellness Tips
+            </button>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <form onsubmit="handleChatSubmit(event)" class="flex items-center gap-2 pt-1 border-t border-slate-200/70 shrink-0">
+            <input type="text" id="chat-input" placeholder="Type a message..."
+              class="flex-1 px-4 py-2.5 rounded-full bg-white border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40" />
+            <button type="submit" id="chat-send-btn" aria-label="Send Message"
+              class="w-10 h-10 rounded-full bg-[#A5A6F6] hover:bg-[#5E60E6] text-white flex items-center justify-center transition shrink-0 cursor-pointer">
+              <svg class="w-4 h-4 translate-x-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- ------------------------------------------------------- -->
+        <!-- TAB 5: SETTINGS MODULE                                  -->
+        <!-- ------------------------------------------------------- -->
+        <div id="view-settings" class="hidden space-y-4 animate-fade-in">
+          <div class="pt-1">
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Settings</h2>
+          </div>
+
+          <!-- Profile Card -->
+          <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#EEF0FC] text-[#5E60E6] flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-800">Profile</p>
+                <p class="text-xs text-slate-400">Update your display name</p>
+              </div>
+            </div>
+
+            <input type="text" id="settings-name-input"
+              class="w-full px-4 py-2.5 rounded-full bg-slate-50 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40" />
+
+            <button onclick="updateProfileName()"
+              class="w-full py-3 rounded-full bg-[#5E60E6] hover:bg-[#4F51D8] text-white font-semibold text-xs shadow-xs transition cursor-pointer">
+              Save Changes
+            </button>
+          </div>
+
+          <!-- Reminders & Security Preferences (From Chapter 3 & 4 Manual) -->
+          <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-bold text-slate-800">Daily Wellness Reminders</p>
+                <p class="text-xs text-slate-400">Gentle evening mood check-in prompt</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settings-reminder-toggle" onchange="toggleReminderPref()" class="sr-only peer" checked />
+                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:bg-[#5E60E6] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+              </label>
+            </div>
+
+            <div class="border-t border-slate-100 pt-3">
+              <p class="text-xs font-semibold text-slate-700 mb-2">Change Password</p>
+              <div class="flex gap-2">
+                <input type="password" id="settings-new-password" placeholder="New password (min 4 chars)"
+                  class="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366F1]/40" />
+                <button onclick="updateUserPassword()"
+                  class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition">
+                  Update
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- About MindBridge Card -->
+          <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-2.5">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-[#EEF0FC] text-[#5E60E6] flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                </svg>
+              </div>
+              <p class="text-sm font-bold text-slate-800">About MindBridge</p>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              MindBridge is a wellness companion designed to help you track your mood, journal your thoughts, and find moments of calm. It is not a medical device and is not a substitute for professional mental health treatment.
+            </p>
+            <p class="text-[11px] text-indigo-600/80 font-medium pt-1">
+              Case Study: Ecole Professionnelle Spécialisée (EPS University) • Dept. of Computer Science
+            </p>
+          </div>
+
+          <!-- Sign Out Button -->
+          <button onclick="handleSignOut()"
+            class="w-full bg-white hover:bg-rose-50/60 border border-slate-200/80 rounded-2xl py-3.5 shadow-xs flex items-center justify-center gap-2 text-xs font-bold text-rose-600 transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </div>
+
+      </main>
+
+      <!-- ========================================================= -->
+      <!-- PERSISTENT 5-TAB BOTTOM NAVIGATION BAR                    -->
+      <!-- ========================================================= -->
+      <nav aria-label="Main Navigation" class="bg-white border-t border-slate-200/80 px-2 py-2 flex items-center justify-around shrink-0 z-20">
+        <button onclick="switchTab('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl text-[#5E60E6] border border-slate-900/80 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          <span class="text-[10px] font-semibold mt-0.5">Home</span>
+        </button>
+
+        <button onclick="switchTab('mood')" id="nav-mood" class="nav-btn flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path stroke-linecap="round" d="M9 10h.01M15 10h.01M8.5 14.5c.83 1.2 2.1 2 3.5 2s2.67-.8 3.5-2" />
+          </svg>
+          <span class="text-[10px] font-medium mt-0.5">Mood</span>
+        </button>
+
+        <button onclick="switchTab('journal')" id="nav-journal" class="nav-btn flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+          </svg>
+          <span class="text-[10px] font-medium mt-0.5">Journal</span>
+        </button>
+
+        <button onclick="switchTab('chat')" id="nav-chat" class="nav-btn flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+          </svg>
+          <span class="text-[10px] font-medium mt-0.5">Chat</span>
+        </button>
+
+        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl text-slate-400 hover:text-slate-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+          <span class="text-[10px] font-medium mt-0.5">Settings</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- INTERACTIVE WELLNESS MODAL DRAWER (Self-Assessment,       -->
+    <!-- Breathing, Resources, Therapist Directory, Crisis Help)   -->
+    <!-- ========================================================= -->
+    <div id="tool-modal" class="hidden fixed sm:absolute inset-0 z-40 bg-slate-900/45 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-white w-full max-w-[440px] max-h-[88vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
+        <!-- Modal Header -->
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 id="modal-title" class="text-base font-bold text-slate-900">Wellness Tool</h3>
+          <button onclick="closeToolModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">
+            &times;
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div id="modal-body" class="p-5 overflow-y-auto space-y-4 text-sm text-slate-700">
+          <!-- Injected dynamically based on tool selected -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // =========================================================================
+    // STATE MANAGEMENT & OFFLINE-FIRST LOCAL STORAGE LAYER
+    // Matches Chapter 3.7.4 Data Storage Design (Users, Moods, Journal, Chat)
+    // =========================================================================
+    const STORAGE_KEYS = {
+      USER: 'mindbridge_user_v1',
+      MOODS: 'mindbridge_moods_v1',
+      JOURNAL: 'mindbridge_journal_v1',
+      CHAT: 'mindbridge_chat_v1',
+      PREFS: 'mindbridge_prefs_v1',
+      ASSESSMENTS: 'mindbridge_assessments_v1'
+    };
+
+    const MOOD_TYPES = [
+      { id: 'Great', label: 'Great', emoji: '😊', score: 5, bg: 'bg-amber-100' },
+      { id: 'Good',  label: 'Good',  emoji: '🙂', score: 4, bg: 'bg-emerald-100' },
+      { id: 'Okay',  label: 'Okay',  emoji: '😐', score: 3, bg: 'bg-blue-100' },
+      { id: 'Low',   label: 'Low',   emoji: '😔', score: 2, bg: 'bg-indigo-100' },
+      { id: 'Bad',   label: 'Bad',   emoji: '😢', score: 1, bg: 'bg-rose-100' }
+    ];
+
+    let isRegisterMode = true;
+    let selectedMoodId = 'Good';
+    let breathingTimer = null;
+
+    // Seed initial realistic sample data if localStorage is empty (matches project screenshots)
+    function seedDefaultDataIfNeeded() {
+      if (!localStorage.getItem(STORAGE_KEYS.MOODS)) {
+        const defaultMoods = [
+          { id: 101, mood: 'Low', note: 'Feeling academic pressure before exams, taking a breather.', dateStr: 'Nov 20', dayShort: 'Fri', score: 2 },
+          { id: 102, mood: 'Okay', note: 'Slept a bit better last night after journaling.', dateStr: 'Nov 19', dayShort: 'Thu', score: 3 },
+          { id: 103, mood: 'Good', note: 'Completed my study group session at EPS.', dateStr: 'Nov 18', dayShort: 'Wed', score: 4 }
+        ];
+        localStorage.setItem(STORAGE_KEYS.MOODS, JSON.stringify(defaultMoods));
+      }
+
+      if (!localStorage.getItem(STORAGE_KEYS.JOURNAL)) {
+        const defaultJournal = [
+          {
+            id: 201,
+            title: 'Good health & balance',
+            content: 'Taking time between lectures to rest my mind and stay hydrated. Small daily check-ins really help.',
+            dateStr: 'Nov 20'
+          },
+          {
+            id: 202,
+            title: 'Managing study stress',
+            content: 'I noticed I do not sleep as much as I should during project week. Setting a reminder to wind down by 10:30 PM.',
+            dateStr: 'Nov 18'
+          }
+        ];
+        localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(defaultJournal));
+      }
+
+      if (!localStorage.getItem(STORAGE_KEYS.CHAT)) {
+        const defaultChat = [
+          {
+            sender: 'ai',
+            text: "Hello! I'm your MindBridge AI Wellness Guide. I'm here to listen, share calming exercises, and help you reflect—never to judge or diagnose. How has your week been going?"
+          }
+        ];
+        localStorage.setItem(STORAGE_KEYS.CHAT, JSON.stringify(defaultChat));
+      }
+    }
+
+    // =========================================================================
+    // INITIALIZATION & CONNECTION STATUS
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      seedDefaultDataIfNeeded();
+      updateConnectionStatus();
+      window.addEventListener('online', updateConnectionStatus);
+      window.addEventListener('offline', updateConnectionStatus);
+
+      const savedUser = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null');
+      if (savedUser && savedUser.isLoggedIn) {
+        enterMainApp(savedUser);
+      } else {
+        showAuthScreen();
+      }
+    });
+
+    function updateConnectionStatus() {
+      const dot = document.getElementById('connection-dot');
+      const label = document.getElementById('connection-label');
+      if (!dot || !label) return;
+      if (navigator.onLine) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        label.textContent = 'Online • Offline-Ready Vault';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+        label.textContent = 'Offline Mode • Local Storage Active';
+      }
+    }
+
+    // =========================================================================
+    // AUTHENTICATION MODULE (Login / Register / Demo Login)
+    // =========================================================================
+    function toggleAuthMode() {
+      isRegisterMode = !isRegisterMode;
+      const nameWrap = document.getElementById('name-field-wrapper');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const toggleBtn = document.getElementById('auth-toggle-btn');
+      const errorEl = document.getElementById('auth-error');
+
+      errorEl.classList.add('hidden');
+      if (isRegisterMode) {
+        nameWrap.classList.remove('hidden');
+        submitBtn.textContent = 'Create Account';
+        toggleBtn.innerHTML = 'Already have an account? <span class="underline font-semibold">Sign in</span>';
+      } else {
+        nameWrap.classList.add('hidden');
+        submitBtn.textContent = 'Sign In';
+        toggleBtn.innerHTML = 'New to MindBridge? <span class="underline font-semibold">Create Account</span>';
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('auth-password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('auth-name').value.trim();
+      const emailInput = document.getElementById('auth-email').value.trim().toLowerCase();
+      const passInput = document.getElementById('auth-password').value;
+      const errorEl = document.getElementById('auth-error');
+
+      if (passInput.length < 4) {
+        errorEl.textContent = 'Please enter a password with at least 4 characters.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const existingUser = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null');
+
+      if (isRegisterMode) {
+        const displayName = nameInput || emailInput.split('@')[0] || 'Student';
+        const userObj = {
+          name: displayName,
+          email: emailInput,
+          password: passInput,
+          isLoggedIn: true
+        };
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userObj));
+        enterMainApp(userObj);
+        showToast(`Welcome to MindBridge, ${displayName}!`);
+      } else {
+        if (existingUser && existingUser.email === emailInput && existingUser.password === passInput) {
+          existingUser.isLoggedIn = true;
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(existingUser));
+          enterMainApp(existingUser);
+          showToast(`Welcome back, ${existingUser.name}!`);
+        } else if (!existingUser) {
+          // Allow seamless first-time sign-in for convenience
+          const fallbackUser = {
+            name: emailInput.split('@')[0],
+            email: emailInput,
+            password: passInput,
+            isLoggedIn: true
+          };
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(fallbackUser));
+          enterMainApp(fallbackUser);
+        } else {
+          errorEl.textContent = 'Invalid email or password. Try again or use Demo Login.';
+          errorEl.classList.remove('hidden');
+        }
+      }
+    }
+
+    function quickDemoLogin() {
+      const demoUser = {
+        name: 'Blessing',
+        email: 'blessing.csc@epsuniversity.edu',
+        password: 'password123',
+        isLoggedIn: true
+      };
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(demoUser));
+      enterMainApp(demoUser);
+      showToast('Signed in as EPS Student Demo');
+    }
+
+    function handleSignOut() {
+      const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null');
+      if (user) {
+        user.isLoggedIn = false;
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      }
+      showAuthScreen();
+      showToast('Signed out securely');
+    }
+
+    function showAuthScreen() {
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('main-app').classList.add('hidden');
+    }
+
+    function enterMainApp(user) {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+      document.getElementById('settings-name-input').value = user.name;
+      refreshDashboard();
+      renderMoodModule();
+      renderJournalList();
+      renderChatMessages();
+      switchTab('home');
+    }
+
+    // =========================================================================
+    // TAB NAVIGATION CONTROLLER
+    // =========================================================================
+    function switchTab(tabName) {
+      const views = ['home', 'mood', 'journal', 'chat', 'settings'];
+      views.forEach(v => {
+        const viewEl = document.getElementById(`view-${v}`);
+        const navEl = document.getElementById(`nav-${v}`);
+        if (v === tabName) {
+          viewEl.classList.remove('hidden');
+          navEl.className = 'nav-btn flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl text-[#5E60E6] border border-slate-900/80 bg-indigo-50/30 transition';
+        } else {
+          viewEl.classList.add('hidden');
+          navEl.className = 'nav-btn flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl text-slate-400 hover:text-slate-600 transition';
+        }
+      });
+
+      document.getElementById('tab-viewport').scrollTop = 0;
+      if (tabName === 'home') refreshDashboard();
+      if (tabName === 'chat') scrollChatToBottom();
+    }
+
+    // =========================================================================
+    // HOME DASHBOARD LOGIC
+    // =========================================================================
+    function getGreetingByTime() {
+      const hr = new Date().getHours();
+      if (hr < 12) return 'Good morning';
+      if (hr < 18) return 'Good afternoon';
+      return 'Good evening';
+    }
+
+    function refreshDashboard() {
+      const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '{"name":"Student"}');
+      const moods = JSON.parse(localStorage.getItem(STORAGE_KEYS.MOODS) || '[]');
+      const journals = JSON.parse(localStorage.getItem(STORAGE_KEYS.JOURNAL) || '[]');
+
+      document.getElementById('dashboard-greeting').textContent = `${getGreetingByTime()}, ${user.name} 👋`;
+      document.getElementById('home-journal-count').textContent = `${journals.length} ${journals.length === 1 ? 'entry' : 'entries'}`;
+
+      // Today's Mood status
+      const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const todayMood = moods.find(m => m.dateStr === todayStr);
+      const todayTextEl = document.getElementById('home-today-mood-text');
+      const todayIconEl = document.getElementById('home-today-mood-icon');
+
+      if (todayMood) {
+        const mInfo = MOOD_TYPES.find(t => t.id === todayMood.mood) || MOOD_TYPES[1];
+        todayTextEl.textContent = `Feeling ${mInfo.label}`;
+        todayIconEl.innerHTML = `<span class="text-2xl">${mInfo.emoji}</span>`;
+      } else {
+        todayTextEl.textContent = 'Tap to check in';
+        todayIconEl.innerHTML = `
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path stroke-linecap="round" d="M9 10h.01M15 10h.01M8.5 14.5c.83 1.2 2.1 2 3.5 2s2.67-.8 3.5-2" />
+          </svg>`;
+      }
+
+      // Recent 3 Moods
+      const recentContainer = document.getElementById('home-recent-moods');
+      const recentThree = moods.slice(0, 3);
+      if (recentThree.length === 0) {
+        recentContainer.innerHTML = `<p class="col-span-3 text-xs text-slate-400 py-2">No mood check-ins logged yet.</p>`;
+      } else {
+        recentContainer.innerHTML = recentThree.map(entry => {
+          const info = MOOD_TYPES.find(t => t.id === entry.mood) || MOOD_TYPES[2];
+          return `
+            <div class="flex flex-col items-center justify-center py-1">
+              <span class="text-2xl mb-1">${info.emoji}</span>
+              <span class="text-[11px] font-medium text-slate-400">${entry.dayShort || entry.dateStr}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // =========================================================================
+    // MOOD TRACKING MODULE
+    // =========================================================================
+    function renderMoodModule() {
+      const grid = document.getElementById('mood-selector-grid');
+      grid.innerHTML = MOOD_TYPES.map(m => {
+        const isSelected = m.id === selectedMoodId;
+        return `
+          <button type="button" onclick="selectMood('${m.id}')"
+            class="flex flex-col items-center p-2 rounded-2xl transition cursor-pointer ${isSelected ? 'bg-indigo-50 ring-2 ring-[#5E60E6] scale-105' : 'hover:bg-slate-50'}">
+            <span class="text-3xl mb-1">${m.emoji}</span>
+            <span class="text-[11px] font-semibold ${isSelected ? 'text-[#5E60E6]' : 'text-slate-600'}">${m.label}</span>
+          </button>
+        `;
+      }).join('');
+
+      const moods = JSON.parse(localStorage.getItem(STORAGE_KEYS.MOODS) || '[]');
+      const historyList = document.getElementById('mood-history-list');
+      const trendBars = document.getElementById('mood-trend-bars');
+
+      // Render trend bars (up to last 7 check-ins)
+      const trendSlice = moods.slice(0, 7).reverse();
+      trendBars.innerHTML = trendSlice.map(item => {
+        const info = MOOD_TYPES.find(t => t.id === item.mood) || MOOD_TYPES[2];
+        const heightPct = (info.score / 5) * 100;
+        return `
+          <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+            <div class="w-full max-w-[28px] rounded-t-lg bg-[#6C6CE5]/80 transition-all" style="height: ${heightPct}%"></div>
+            <span class="text-[9px] text-slate-400">${item.dayShort || ''}</span>
+          </div>
+        `;
+      }).join('');
+
+      if (moods.length === 0) {
+        historyList.innerHTML = `<p class="text-xs text-slate-400 text-center py-6 bg-white rounded-2xl border border-slate-200/70">No check-ins yet. Select how you feel above!</p>`;
+        return;
+      }
+
+      historyList.innerHTML = moods.map(item => {
+        const info = MOOD_TYPES.find(t => t.id === item.mood) || MOOD_TYPES[2];
+        return `
+          <div class="bg-white border border-slate-200/70 rounded-2xl px-4 py-3 shadow-xs flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-2xl shrink-0">${info.emoji}</span>
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-slate-800">${info.label}</p>
+                <p class="text-xs text-slate-500 truncate">${escapeHtml(item.note || 'Checked in')}</p>
+              </div>
+            </div>
+            <span class="text-[11px] font-medium text-slate-400 shrink-0">${item.dateStr}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectMood(moodId) {
+      selectedMoodId = moodId;
+      renderMoodModule();
+    }
+
+    function saveMoodEntry() {
+      const noteInput = document.getElementById('mood-note-input');
+      const note = noteInput.value.trim();
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dayShort = now.toLocaleDateString('en-US', { weekday: 'short' });
+      const info = MOOD_TYPES.find(t => t.id === selectedMoodId) || MOOD_TYPES[1];
+
+      const moods = JSON.parse(localStorage.getItem(STORAGE_KEYS.MOODS) || '[]');
+      moods.unshift({
+        id: Date.now(),
+        mood: selectedMoodId,
+        note: note || `Feeling ${info.label.toLowerCase()}`,
+        dateStr,
+        dayShort,
+        score: info.score
+      });
+
+      localStorage.setItem(STORAGE_KEYS.MOODS, JSON.stringify(moods));
+      noteInput.value = '';
+      renderMoodModule();
+      refreshDashboard();
+      showToast(`Mood "${info.label}" saved`);
+    }
+
+    // =========================================================================
+    // PRIVATE JOURNAL MODULE
+    // =========================================================================
+    function openJournalComposer() {
+      document.getElementById('journal-composer').classList.remove('hidden');
+      document.getElementById('journal-title-input').focus();
+    }
+
+    function closeJournalComposer() {
+      document.getElementById('journal-composer').classList.add('hidden');
+      document.getElementById('journal-title-input').value = '';
+      document.getElementById('journal-body-input').value = '';
+    }
+
+    function saveJournalEntry() {
+      const title = document.getElementById('journal-title-input').value.trim() || 'Untitled';
+      const content = document.getElementById('journal-body-input').value.trim();
+
+      if (!content) {
+        showToast('Please write a thought before saving.');
+        return;
+      }
+
+      const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const journals = JSON.parse(localStorage.getItem(STORAGE_KEYS.JOURNAL) || '[]');
+      journals.unshift({
+        id: Date.now(),
+        title,
+        content,
+        dateStr
+      });
+
+      localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(journals));
+      closeJournalComposer();
+      renderJournalList();
+      refreshDashboard();
+      showToast('Journal entry saved privately');
+    }
+
+    function deleteJournalEntry(id) {
+      let journals = JSON.parse(localStorage.getItem(STORAGE_KEYS.JOURNAL) || '[]');
+      journals = journals.filter(j => j.id !== id);
+      localStorage.setItem(STORAGE_KEYS.JOURNAL, JSON.stringify(journals));
+      renderJournalList();
+      refreshDashboard();
+      showToast('Entry removed');
+    }
+
+    function renderJournalList() {
+      const journals = JSON.parse(localStorage.getItem(STORAGE_KEYS.JOURNAL) || '[]');
+      const listEl = document.getElementById('journal-list');
+
+      if (journals.length === 0) {
+        listEl.innerHTML = `
+          <div class="bg-white border border-slate-200/70 rounded-2xl p-6 text-center space-y-2">
+            <p class="text-sm font-semibold text-slate-700">Your journal is empty</p>
+            <p class="text-xs text-slate-400">Tap the + button above to write your first private reflection.</p>
+          </div>`;
+        return;
+      }
+
+      listEl.innerHTML = journals.map(entry => `
+        <div class="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-xs space-y-1.5 group">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="text-sm font-bold text-slate-800">${escapeHtml(entry.title)}</h3>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[11px] font-medium text-slate-400">${entry.dateStr}</span>
+              <button onclick="deleteJournalEntry(${entry.id})" title="Delete entry"
+                class="text-slate-300 hover:text-rose-500 text-xs px-1 transition">&times;</button>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 leading-relaxed whitespace-pre-line">${escapeHtml(entry.content)}</p>
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // AI WELLNESS GUIDE (GEMINI API + EMPATHETIC OFFLINE FALLBACK)
+    // =========================================================================
+    function renderChatMessages() {
+      const messages = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT) || '[]');
+      const container = document.getElementById('chat-messages-container');
+
+      container.innerHTML = messages.map(msg => {
+        if (msg.sender === 'user') {
+          return `
+            <div class="flex items-end justify-end gap-2">
+              <div class="max-w-[78%] bg-[#5E60E6] text-white text-xs leading-relaxed px-4 py-2.5 rounded-2xl rounded-br-sm shadow-xs">
+                ${escapeHtml(msg.text)}
+              </div>
+              <div class="w-7 h-7 rounded-full bg-indigo-100 text-[#5E60E6] flex items-center justify-center shrink-0 text-xs font-bold">
+                U
+              </div>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="flex items-start gap-2.5">
+              <div class="w-7 h-7 rounded-full bg-indigo-100 text-[#5E60E6] flex items-center justify-center shrink-0 mt-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                </svg>
+              </div>
+              <div class="max-w-[82%] bg-[#F0F1F8] text-slate-700 text-xs leading-relaxed px-4 py-3 rounded-2xl rounded-tl-sm">
+                ${escapeHtml(msg.text)}
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      scrollChatToBottom();
+    }
+
+    function scrollChatToBottom() {
+      const container = document.getElementById('chat-messages-container');
+      if (container) container.scrollTop = container.scrollHeight;
+    }
+
+    async function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      input.value = '';
+      const messages = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT) || '[]');
+      messages.push({ sender: 'user', text: userText });
+      localStorage.setItem(STORAGE_KEYS.CHAT, JSON.stringify(messages));
+      renderChatMessages();
+
+      // Append temporary typing bubble
+      const container = document.getElementById('chat-messages-container');
+      const typingId = 'typing-' + Date.now();
+      container.insertAdjacentHTML('beforeend', `
+        <div id="${typingId}" class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-full bg-indigo-100 text-[#5E60E6] flex items-center justify-center shrink-0 text-xs">...</div>
+          <div class="bg-[#F0F1F8] text-slate-500 text-xs px-4 py-2.5 rounded-2xl">Listening thoughtfully...</div>
+        </div>
+      `);
+      scrollChatToBottom();
+
+      const reply = await fetchWellnessAIResponse(userText, messages);
+      const typingEl = document.getElementById(typingId);
+      if (typingEl) typingEl.remove();
+
+      messages.push({ sender: 'ai', text: reply });
+      localStorage.setItem(STORAGE_KEYS.CHAT, JSON.stringify(messages));
+      renderChatMessages();
+    }
+
+    async function fetchWellnessAIResponse(userText, history) {
+      const systemInstruction = `You are MindBridge's AI Wellness Guide for university students (specifically EPS University).
+Rules:
+1. Be warm, empathetic, concise (2-4 sentences), and supportive.
+2. Explicitly remember: you are NOT a medical device and CANNOT diagnose conditions or prescribe medication. If the user mentions physical illness (like malaria, fever, severe pain) or crisis, gently encourage reaching out to a local clinic, campus counselor, or emergency helpline (988 / campus health).
+3. Suggest simple evidence-based coping strategies like 4-7-8 breathing, grounding (5-4-3-2-1), or journaling when appropriate.`;
+
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const contents = history.slice(-6).map(m => ({
+        role: m.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: m.text }]
+      }));
+
+      const payload = {
+        contents,
+        systemInstruction: { parts: [{ text: systemInstruction }] }
+      };
+
+      // Exponential backoff retry wrapper
+      const delays = [1000, 2000, 4000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          if (!navigator.onLine) throw new Error('Offline');
+          const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('API status ' + res.status);
+          const data = await res.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) return text.trim();
+          throw new Error('Empty candidate');
+        } catch (err) {
+          if (attempt === delays.length || !navigator.onLine) {
+            return generateOfflineWellnessReply(userText);
+          }
+          await new Promise(r => setTimeout(r, delays[attempt]));
+        }
+      }
+      return generateOfflineWellnessReply(userText);
+    }
+
+    function generateOfflineWellnessReply(text) {
+      const lower = text.toLowerCase();
+      if (lower.includes('malaria') || lower.includes('sick') || lower.includes('fever') || lower.includes('pain')) {
+        return "I'm really sorry you're feeling physically unwell on top of everything else. Please remember that as an AI companion, I cannot provide a medical diagnosis—it is very important to visit a healthcare professional or local clinic as soon as possible so you can get proper care and rest.";
+      }
+      if (lower.includes('exam') || lower.includes('school') || lower.includes('study') || lower.includes('stress') || lower.includes('anxious')) {
+        return "Academic pressure and stress can feel overwhelming, especially during busy weeks. Try taking a 2-minute pause with our Guided Breathing exercise, and break your next task into one small 15-minute step. You're doing your best, and that's enough for right now.";
+      }
+      if (lower.includes('sleep') || lower.includes('tired') || lower.includes('insomnia')) {
+        return "Lack of rest makes emotional stress feel twice as heavy. Tonight, try stepping away from screens 20 minutes before bed and jotting down any racing thoughts in your Journal so your mind knows it can rest.";
+      }
+      if (lower.includes('sad') || lower.includes('lonely') || lower.includes('home') || lower.includes('low')) {
+        return "Thank you for sharing how you're feeling—it takes courage to admit when you're feeling low. Remember you don't have to carry everything alone; consider reaching out to a trusted friend, family member, or the EPS University counseling office.";
+      }
+      return "I'm here with you and listening. Would you like to try a quick 4-7-8 breathing exercise together, or take a short wellness self-check to see how you're holding up today?";
+    }
+
+    // =========================================================================
+    // SETTINGS MODULE
+    // =========================================================================
+    function updateProfileName() {
+      const newName = document.getElementById('settings-name-input').value.trim();
+      if (!newName) {
+        showToast('Display name cannot be empty');
+        return;
+      }
+      const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '{}');
+      user.name = newName;
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      refreshDashboard();
+      showToast('Profile display name updated');
+    }
+
+    function toggleReminderPref() {
+      const enabled = document.getElementById('settings-reminder-toggle').checked;
+      localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify({ dailyReminder: enabled }));
+      showToast(enabled ? 'Daily wellness reminders enabled' : 'Daily reminders paused');
+    }
+
+    function updateUserPassword() {
+      const newPass = document.getElementById('settings-new-password').value;
+      if (newPass.length < 4) {
+        showToast('Password must be at least 4 characters');
+        return;
+      }
+      const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || '{}');
+      user.password = newPass;
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      document.getElementById('settings-new-password').value = '';
+      showToast('Password updated securely');
+    }
+
+    // =========================================================================
+    // CHAPTER 3 INTERACTIVE MODALS (Self-Assessment, Breathing, Resources, etc.)
+    // =========================================================================
+    function openToolModal(toolType) {
+      const modal = document.getElementById('tool-modal');
+      const titleEl = document.getElementById('modal-title');
+      const bodyEl = document.getElementById('modal-body');
+
+      if (breathingTimer) {
+        clearInterval(breathingTimer);
+        breathingTimer = null;
+      }
+
+      if (toolType === 'assessment') {
+        titleEl.textContent = 'Wellness Self-Assessment';
+        const questions = [
+          '1. Feeling nervous, anxious, or on edge over the past week?',
+          '2. Not being able to stop or control worrying about studies or personal life?',
+          '3. Having trouble falling asleep, staying asleep, or feeling fatigued?',
+          '4. Feeling little interest or pleasure in doing daily activities?',
+          '5. Feeling overwhelmed by responsibilities or isolated from support?'
+        ];
+        bodyEl.innerHTML = `
+          <p class="text-xs text-slate-500">Answer these 5 brief questions to reflect on your current stress &amp; emotional wellness. (Not a clinical diagnosis.)</p>
+          <div class="space-y-3.5" id="assessment-form">
+            ${questions.map((q, idx) => `
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/70 space-y-2">
+                <p class="text-xs font-semibold text-slate-800">${q}</p>
+                <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                  <label class="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                    <input type="radio" name="q${idx}" value="0" checked class="accent-[#5E60E6]" /> Not at all
+                  </label>
+                  <label class="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                    <input type="radio" name="q${idx}" value="1" class="accent-[#5E60E6]" /> Several days
+                  </label>
+                  <label class="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                    <input type="radio" name="q${idx}" value="2" class="accent-[#5E60E6]" /> More than half
+                  </label>
+                  <label class="flex items-center gap-1.5 bg-white p-2 rounded-xl border border-slate-200 cursor-pointer">
+                    <input type="radio" name="q${idx}" value="3" class="accent-[#5E60E6]" /> Nearly every day
+                  </label>
+                </div>
+              </div>
+            `).join('')}
+            <button onclick="evaluateAssessment()"
+              class="w-full py-3 rounded-full bg-[#5E60E6] hover:bg-[#4F51D8] text-white font-semibold text-xs shadow-sm transition cursor-pointer">
+              View Wellness Feedback
+            </button>
+          </div>
+          <div id="assessment-result" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl p-4 space-y-2"></div>
+        `;
+      } else if (toolType === 'breathing') {
+        titleEl.textContent = 'Guided 4-7-8 Relaxation';
+        bodyEl.innerHTML = `
+          <div class="text-center space-y-5 py-3">
+            <p class="text-xs text-slate-500">Follow the expanding circle to calm your nervous system and lower stress.</p>
+            <div class="relative flex items-center justify-center h-48">
+              <div id="breath-circle" class="breath-circle w-28 h-28 rounded-full bg-indigo-100 border-4 border-[#5E60E6]/40 flex items-center justify-center shadow-inner">
+                <span id="breath-phase-text" class="text-sm font-bold text-[#5E60E6]">Ready</span>
+              </div>
+            </div>
+            <p id="breath-instruction" class="text-xs font-medium text-slate-600">Tap Start to begin a calming breathing cycle.</p>
+            <button id="breath-toggle-btn" onclick="toggleBreathingExercise()"
+              class="px-8 py-3 rounded-full bg-[#5E60E6] hover:bg-[#4F51D8] text-white font-semibold text-xs shadow-sm transition cursor-pointer">
+              Start Exercise
+            </button>
+          </div>
+        `;
+      } else if (toolType === 'resources') {
+        titleEl.textContent = 'Mental Health Resources & Tips';
+        bodyEl.innerHTML = `
+          <div class="space-y-3">
+            <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-100 space-y-1">
+              <h4 class="text-xs font-bold text-[#5E60E6]">📚 Overcoming Academic &amp; Exam Stress</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">Use the 25-minute Pomodoro study block followed by a 5-minute screen-free stretch. Breaking coursework reduces cognitive overwhelm.</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-1">
+              <h4 class="text-xs font-bold text-emerald-700">🌿 5-4-3-2-1 Grounding Technique</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">When anxious, name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, and 1 you taste to anchor yourself in the present.</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100 space-y-1">
+              <h4 class="text-xs font-bold text-amber-700">🤝 Breaking Mental Health Stigma</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">Seeking emotional support is a sign of strength, not weakness. Talking to a trusted peer or counselor early prevents burnout.</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-sky-50/60 border border-sky-100 space-y-1">
+              <h4 class="text-xs font-bold text-sky-700">🌙 Healthy Sleep Hygiene</h4>
+              <p class="text-xs text-slate-600 leading-relaxed">Aim for 7–8 hours of rest. Avoid caffeine late in the evening and keep a consistent wake-up schedule.</p>
+            </div>
+          </div>
+        `;
+      } else if (toolType === 'therapist') {
+        titleEl.textContent = 'Professional Support Directory';
+        bodyEl.innerHTML = `
+          <div class="space-y-3">
+            <p class="text-xs text-slate-500">While MindBridge supports daily self-care, licensed professionals provide personalized clinical guidance:</p>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <p class="text-xs font-bold text-slate-800">🏫 EPS University Student Counseling Unit</p>
+              <p class="text-xs text-slate-500">Student Affairs &amp; Wellness Office, Cotonou Campus • Mon–Fri, 8:00 AM – 5:00 PM</p>
+              <p class="text-[11px] font-semibold text-[#5E60E6] pt-1">Confidential &amp; Free for Enrolled Students</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <p class="text-xs font-bold text-slate-800">🏥 Community Health &amp; Psychiatric Support</p>
+              <p class="text-xs text-slate-500">CNHU-HKM Mental Health Outpatient Clinic, Cotonou • Licensed Clinical Psychologists</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+              <p class="text-xs font-bold text-slate-800">🌐 Online Tele-Counseling Access</p>
+              <p class="text-xs text-slate-500">Schedule virtual sessions with certified mental health practitioners from your smartphone.</p>
+            </div>
+          </div>
+        `;
+      } else if (toolType === 'crisis') {
+        titleEl.textContent = '24/7 Immediate Crisis Support';
+        bodyEl.innerHTML = `
+          <div class="space-y-3 text-center">
+            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">🆘</div>
+            <h4 class="text-base font-bold text-slate-900">You Are Not Alone</h4>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              If you or someone you know is in immediate emotional distress or danger, please reach out to free, confidential 24/7 crisis support right now:
+            </p>
+            <div class="bg-[#F1F1FA] border border-indigo-200 rounded-2xl p-4 space-y-2">
+              <p class="text-sm font-bold text-[#4A4CB8]">Call or Text 988</p>
+              <p class="text-xs text-slate-500">Suicide &amp; Crisis Lifeline — Available 24/7</p>
+              <a href="tel:988" class="inline-block mt-1 px-6 py-2.5 rounded-full bg-[#5E60E6] text-white text-xs font-semibold shadow-xs">
+                Call Helpline Now
+              </a>
+            </div>
+            <p class="text-[11px] text-slate-400">Or contact your nearest hospital emergency department / campus security immediately.</p>
+          </div>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeToolModal() {
+      if (breathingTimer) {
+        clearInterval(breathingTimer);
+        breathingTimer = null;
+      }
+      document.getElementById('tool-modal').classList.add('hidden');
+    }
+
+    function evaluateAssessment() {
+      let total = 0;
+      for (let i = 0; i < 5; i++) {
+        const checked = document.querySelector(`input[name="q${i}"]:checked`);
+        if (checked) total += parseInt(checked.value, 10);
+      }
+
+      let level = 'Low Stress / Balanced';
+      let advice = 'Your responses suggest healthy emotional balance right now. Keep maintaining your daily mood check-ins, good sleep, and journaling habits.';
+      if (total >= 5 && total <= 9) {
+        level = 'Mild to Moderate Stress';
+        advice = 'You may be carrying moderate academic or daily stress. Try using the 4-7-8 Guided Breathing tool today, prioritize rest, and talk with a trusted friend or the AI Wellness Guide.';
+      } else if (total >= 10) {
+        level = 'Elevated Emotional Strain';
+        advice = 'Your responses indicate significant stress or emotional fatigue. Consider booking a confidential chat with the EPS University Counseling Office or a licensed therapist for extra support.';
+      }
+
+      // Persist assessment record per Chapter 3.7.4
+      const records = JSON.parse(localStorage.getItem(STORAGE_KEYS.ASSESSMENTS) || '[]');
+      records.unshift({ id: Date.now(), score: total, level, date: new Date().toLocaleDateString() });
+      localStorage.setItem(STORAGE_KEYS.ASSESSMENTS, JSON.stringify(records));
+
+      const resBox = document.getElementById('assessment-result');
+      resBox.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-[#5E60E6]">Result: ${level}</span>
+          <span class="text-[11px] font-semibold bg-white px-2.5 py-0.5 rounded-full text-slate-700">Score: ${total} / 15</span>
+        </div>
+        <p class="text-xs text-slate-700 leading-relaxed">${advice}</p>
+      `;
+      resBox.classList.remove('hidden');
+      resBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleBreathingExercise() {
+      const btn = document.getElementById('breath-toggle-btn');
+      const circle = document.getElementById('breath-circle');
+      const phaseText = document.getElementById('breath-phase-text');
+      const instruction = document.getElementById('breath-instruction');
+
+      if (breathingTimer) {
+        clearInterval(breathingTimer);
+        breathingTimer = null;
+        btn.textContent = 'Start Exercise';
+        circle.style.transform = 'scale(1)';
+        phaseText.textContent = 'Ready';
+        instruction.textContent = 'Paused. Tap Start whenever you are ready.';
+        return;
+      }
+
+      btn.textContent = 'Stop Exercise';
+      const phases = [
+        { name: 'Inhale', scale: 'scale(1.45)', color: '#E0E7FF', tip: 'Breathe in slowly through your nose (4s)...', duration: 4000 },
+        { name: 'Hold',   scale: 'scale(1.45)', color: '#DDD6FE', tip: 'Hold your breath gently (4s)...', duration: 4000 },
+        { name: 'Exhale', scale: 'scale(1.0)',  color: '#E0F2FE', tip: 'Exhale slowly through your mouth (5s)...', duration: 5000 }
+      ];
+
+      let step = 0;
+      const runStep = () => {
+        const current = phases[step % phases.length];
+        phaseText.textContent = current.name;
+        instruction.textContent = current.tip;
+        circle.style.transform = current.scale;
+        circle.style.backgroundColor = current.color;
+        step++;
+      };
+
+      runStep();
+      breathingTimer = setInterval(runStep, 4300);
+    }
+
+    // =========================================================================
+    // HELPERS (Toast & HTML Sanitization)
+    // =========================================================================
+    let toastTimeout = null;
+    function showToast(msg) {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-message').textContent = msg;
+      banner.classList.remove('hidden');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(hideToast, 3000);
+    }
+
+    function hideToast() {
+      document.getElementById('toast-banner').classList.add('hidden');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
